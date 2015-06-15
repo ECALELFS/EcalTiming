@@ -1,0 +1,4 @@
+<map id="EcalCrystalTimingCalibration::insertEvent" name="EcalCrystalTimingCalibration::insertEvent">
+<area shape="rect" href="$classEcalCrystalTimingCalibration.html#ad6744632b1582014b6f278e8ab82850e" title="add new event for this crystal " alt="" coords="247,13,468,40"/>
+<area shape="rect" href="$classEcalTimingCalibProducer.html#ab19f8edd4cf536a61996f5c594db553f" title="If recHit passes the selection it is added to the list of recHits to be used for calibration. " alt="" coords="519,5,689,48"/>
+</map>

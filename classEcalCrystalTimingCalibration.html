@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -84,6 +84,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="classEcalCrystalTimingCalibration-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -91,11 +93,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p><code>#include &lt;EcalCrystalTimingCalibration.cc&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="EcalCrystalTimingCalibration_8h_source.html">EcalTiming/EcalTiming/interface/EcalCrystalTimingCalibration.h</a>&gt;</code></p>
 <div class="dynheader">
 Collaboration diagram for EcalCrystalTimingCalibration:</div>
 <div class="dyncontent">
 <div class="center"><img src="classEcalCrystalTimingCalibration__coll__graph.png" border="0" usemap="#EcalCrystalTimingCalibration_coll__map" alt="Collaboration graph"/></div>
+<map name="EcalCrystalTimingCalibration_coll__map" id="EcalCrystalTimingCalibration_coll__map">
+</map>
 </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -112,6 +116,30 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:ad6744632b1582014b6f278e8ab82850e"><td class="mdescLeft">&#160;</td><td class="mdescRight">add new event for this crystal <br/></td></tr>
 <tr class="separator:ad6744632b1582014b6f278e8ab82850e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a9cc4279767a855330ddc7d7ae20799d5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classEcalCrystalTimingCalibration.html#a9cc4279767a855330ddc7d7ae20799d5">insertEvent</a> (<a class="el" href="classEcalTimingEvent.html">EcalTimingEvent</a> te_)</td></tr>
+<tr class="separator:a9cc4279767a855330ddc7d7ae20799d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr class="memitem:a692a4fa9497ac4994d3a48d7c97123df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a692a4fa9497ac4994d3a48d7c97123df"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classEcalCrystalTimingCalibration.html#a692a4fa9497ac4994d3a48d7c97123df">_sum</a></td></tr>
+<tr class="memdesc:a692a4fa9497ac4994d3a48d7c97123df"><td class="mdescLeft">&#160;</td><td class="mdescRight">scalar sum of the time of each timingEvent <br/></td></tr>
+<tr class="separator:a692a4fa9497ac4994d3a48d7c97123df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a428e230828ca81e1913eaaf528ec3df0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a428e230828ca81e1913eaaf528ec3df0"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classEcalCrystalTimingCalibration.html#a428e230828ca81e1913eaaf528ec3df0">_sum2</a></td></tr>
+<tr class="memdesc:a428e230828ca81e1913eaaf528ec3df0"><td class="mdescLeft">&#160;</td><td class="mdescRight">scalar sum of the square of the time of each timingEvent <br/></td></tr>
+<tr class="separator:a428e230828ca81e1913eaaf528ec3df0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c6c78dd2783681fec6a8fb3467087fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4c6c78dd2783681fec6a8fb3467087fd"></a>
+unsigned long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classEcalCrystalTimingCalibration.html#a4c6c78dd2783681fec6a8fb3467087fd">_num</a></td></tr>
+<tr class="memdesc:a4c6c78dd2783681fec6a8fb3467087fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of timingEvents; <br/></td></tr>
+<tr class="separator:a4c6c78dd2783681fec6a8fb3467087fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80abd6aac5be2aa977e06132b5c0ede1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80abd6aac5be2aa977e06132b5c0ede1"></a>
+std::vector&lt; <a class="el" href="classEcalTimingEvent.html">EcalTimingEvent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classEcalCrystalTimingCalibration.html#a80abd6aac5be2aa977e06132b5c0ede1">timingEvents</a></td></tr>
+<tr class="memdesc:a80abd6aac5be2aa977e06132b5c0ede1"><td class="mdescLeft">&#160;</td><td class="mdescRight">vector containing all the events for this crystal <br/></td></tr>
+<tr class="separator:a80abd6aac5be2aa977e06132b5c0ede1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
 <tr class="memitem:a0feccaa30001905855b97b9d084645ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0feccaa30001905855b97b9d084645ae"></a>
@@ -122,6 +150,44 @@ std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Description: add a description here This class contains all the timing information for a single crystal </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a9cc4279767a855330ddc7d7ae20799d5"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool EcalCrystalTimingCalibration::insertEvent </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classEcalTimingEvent.html">EcalTimingEvent</a>&#160;</td>
+          <td class="paramname"><em>te_</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>weighted average by timeError </dd></dl>
+
+<p>References <a class="el" href="classEcalCrystalTimingCalibration.html#a4c6c78dd2783681fec6a8fb3467087fd">_num</a>, <a class="el" href="classEcalCrystalTimingCalibration.html#a692a4fa9497ac4994d3a48d7c97123df">_sum</a>, <a class="el" href="classEcalCrystalTimingCalibration.html#a428e230828ca81e1913eaaf528ec3df0">_sum2</a>, and <a class="el" href="classEcalCrystalTimingCalibration.html#a80abd6aac5be2aa977e06132b5c0ede1">timingEvents</a>.</p>
+
+<p>Referenced by <a class="el" href="classEcalCrystalTimingCalibration.html#ad6744632b1582014b6f278e8ab82850e">add()</a>.</p>
+
+<p><div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="classEcalCrystalTimingCalibration_a9cc4279767a855330ddc7d7ae20799d5_icgraph.png" border="0" usemap="#classEcalCrystalTimingCalibration_a9cc4279767a855330ddc7d7ae20799d5_icgraph" alt=""/></div>
+<map name="classEcalCrystalTimingCalibration_a9cc4279767a855330ddc7d7ae20799d5_icgraph" id="classEcalCrystalTimingCalibration_a9cc4279767a855330ddc7d7ae20799d5_icgraph">
+<area shape="rect" href="classEcalCrystalTimingCalibration.html#ad6744632b1582014b6f278e8ab82850e" title="add new event for this crystal " alt="" coords="247,13,468,40"/><area shape="rect" href="classEcalTimingCalibProducer.html#ab19f8edd4cf536a61996f5c594db553f" title="If recHit passes the selection it is added to the list of recHits to be used for calibration. " alt="" coords="519,5,689,48"/></map>
+</div>
+</p>
+
+</div>
+</div>
 <a class="anchor" id="a6a0685fed9b017364a5806e08cf656d4"></a>
 <div class="memitem">
 <div class="memproto">
@@ -144,6 +210,8 @@ std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="
 </div><div class="memdoc">
 <p>&lt; standard deviation of the time distribution </p>
 
+<p>References <a class="el" href="classEcalCrystalTimingCalibration.html#a4c6c78dd2783681fec6a8fb3467087fd">_num</a>, and <a class="el" href="classEcalCrystalTimingCalibration.html#a428e230828ca81e1913eaaf528ec3df0">_sum2</a>.</p>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
@@ -152,7 +220,7 @@ std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jun 8 2015 09:58:36 for EcalTiming by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jun 15 2015 10:49:52 for EcalTiming by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>
