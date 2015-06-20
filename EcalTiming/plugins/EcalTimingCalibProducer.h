@@ -11,9 +11,16 @@
 
 //#define DEBUG
 #define RAWIDCRY 838904321
+
+/// The entire set of events are saved for one channel in EB and one channel in EE in order to debug
+#define EBCRYex 838861346
+#define EECRYex 872422180
+
+/// For one ring in EB, one in EE+ and one in EE- the entire set of events are saved to debug
 #define EBRING 1
 #define EEmRING 20
 #define EEpRING 20
+
 #define SPEEDOFLIGHT 30.0 // (cm/ns)
 
 // system include files
@@ -106,6 +113,12 @@ private:
 	EcalCrystalTimingCalibration timeEEP; ///< global time calibration of EE+
 	EcalCrystalTimingCalibration timeEEM; ///< global time calibration of EE-
 	EcalCrystalTimingCalibration timeEB; ///< global time calibration of EB
+	EcalCrystalTimingCalibration timeEBRing; ///< global time calibration of one EB ring
+	EcalCrystalTimingCalibration timeEEmRing; ///< global time calibration of one EE- ring
+	EcalCrystalTimingCalibration timeEEpRing; ///< global time calibration of one EE+ ring
+	EcalCrystalTimingCalibration timeEBCRYex; ///< global time calibration of one EB channel
+	EcalCrystalTimingCalibration timeEECRYex; ///< global time calibration of one EE channel
+
 	float nearEndcapTime;
 	float farEndcapTime;
 
@@ -152,6 +165,7 @@ private:
 	void FillCalibrationCorrectionHists(EcalTimeCalibrationMap::const_iterator cal_itr);
 	void initHists(TFileDirectory dir);
 	void initEventHists(TFileDirectory dir);
+	void initTree(TFileDirectory dir);
 
 	// Create calibration container objects -> to be used in beginOfJob
 	void createConstants(const edm::EventSetup& iSetup)
@@ -234,6 +248,9 @@ private:
 
 	edm::Service<TFileService> fileService_;
 	TFileDirectory histDir_;
+	// Tree
+	TTree *timeEBCRYexTree, *timeEECRYexTree, *timeEEpRingTree, *timeEEmRingTree, *timeEBRingTree;
+
 	// Mean Histograms
 	TProfile2D* EneMapEEP_; /// Using TProfile2D so we don't paint empty bins.
 	TProfile2D* EneMapEEM_;

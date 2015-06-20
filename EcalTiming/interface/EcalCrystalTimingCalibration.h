@@ -1,6 +1,7 @@
 #include "EcalTiming/EcalTiming/interface/EcalTimingEvent.h"
-
+#include <cassert>
 #include <vector>
+#include <TTree.h>
 
 /** \class EcalCrystalTimingCalibration EcalCrystalTimingCalibration.h EcalTiming/EcalTiming/interface/EcalCrystalTimingCalibration.h
  *
@@ -86,6 +87,27 @@ public:
 
 	timingEvents.clear();
 	}
+
+	/// need an empty tree
+	void dumpToTree(TTree *tree, int ix_, int iy_, int iz_){
+		assert(tree->GetEntries()==0);
+		Float_t time, timeError, energy;
+		Int_t ix=ix_, iy=iy_, iz=iz_;
+		tree->Branch("ix", &ix, "ix/I");
+		tree->Branch("iy", &iy, "iy/I");
+		tree->Branch("iz", &iz, "iz/I");
+		tree->Branch("time", &time, "time/F");
+		tree->Branch("timeError", &timeError, "timeError/F");
+		tree->Branch("energy", &energy, "energy/F");
+
+		for(auto te : timingEvents){
+			time = te.time();
+			energy = te.energy();
+			timeError = te.timeError();
+			tree->Fill();
+		}
+	}		
+
 private:
 	/// \todo weighted average by timeError
 	bool insertEvent(EcalTimingEvent te_)

@@ -2,8 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 looper = cms.Looper("EcalTimingCalibProducer",
                     maxLoop = cms.uint32(2),
-                    isSplash = cms.bool(True if options.isSplash == 1 else  False),
-                    makeEventPlots = cms.bool(evtPlots),
+                    isSplash = cms.bool(False),
+                    makeEventPlots = cms.bool(False),
                     recHitEBCollection = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
                     recHitEECollection = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
                     recHitFlags = cms.vint32([0]), # only recHits with these flags are accepted for calibration
@@ -12,9 +12,9 @@ looper = cms.Looper("EcalTimingCalibProducer",
                     minRecHitEnergy = cms.double(1),
                     minRecHitEnergyStep = cms.double(0.5),
                     minEntries = cms.uint32(1),
-                    globalOffset = cms.double(options.offset),
+                    globalOffset = cms.double(0.),
                     produceNewCalib = cms.bool(True),
-                    outputDumpFile = process.TFileService.fileName,
+                    outputDumpFile = cms.string('output.dat'),
                     noiseRMSThreshold = cms.double(0.5),
-                    noiseTimeThreshold = cms.double(2.0)
+                    noiseTimeThreshold = cms.double(6.0),
                     )

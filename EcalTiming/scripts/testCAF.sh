@@ -1,5 +1,6 @@
 RUNLIST="243479 243484 243506"
 RUNLIST=`cat runlist`
+RUNLIST="248030"
 STREAM=AlCaPhiSym
 
 for RUN in ${RUNLIST}
@@ -18,7 +19,10 @@ filelist=`das_client.py --query="file dataset=/AlCaPhiSym/Run2015A-v1/RAW run=${
 filelist=`echo ${filelist}| sed 's| |,|g;s|,$||'`
 echo ${filelist}
 
-bsub -oo ${OUTDIR}/stdout.log -eo ${OUTDIR}/stderr.log -q 1nd "cd $PWD; eval \`scramv1 runtime -sh\`; cmsRun test/ecalTime_fromAlcaStream_cfg.py files=${filelist} output=${OUTDIR}/ecalTiming-${RUN}.root maxEvents=-1" || exit 1
+#bsub -oo ${OUTDIR}/stdout.log -eo ${OUTDIR}/stderr.log -q 1nd "cd $PWD; eval \`scramv1 runtime -sh\`; 
+cmsRun test/ecalTime_fromAlcaStream_cfg.py files=${filelist} output=${OUTDIR}/ecalTiming-${RUN}.root maxEvents=-1
+#:w
+#" || exit 1
 
 done
 exit 0

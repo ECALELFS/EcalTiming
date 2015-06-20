@@ -38,6 +38,8 @@ EcalTimingCalibProducer::EcalTimingCalibProducer(const edm::ParameterSet& iConfi
 	_ecalRecHitsEETAG(iConfig.getParameter<edm::InputTag>("recHitEECollection")),
 	_recHitFlags(iConfig.getParameter<std::vector<int> >("recHitFlags")),
 	_recHitMin(iConfig.getParameter<unsigned int>("recHitMinimumN")),
+
+	///\todo the min energy should be in ADC not in energy 
         _minRecHitEnergy(iConfig.getParameter<double>("minRecHitEnergy")),
 	_minRecHitEnergyStep(iConfig.getParameter<double>("minRecHitEnergyStep")),
         _minEntries(iConfig.getParameter<unsigned int>("minEntries")),
@@ -118,6 +120,7 @@ void EcalTimingCalibProducer::startingNewLoop(unsigned int iIteration)
 	histDir_ = fileService_->mkdir( histDirName);
 
 	initHists(histDir_);
+	initTree(histDir_);
 
 	// reset the calibration
 	_timeCalibMap.clear();
@@ -127,8 +130,12 @@ void EcalTimingCalibProducer::startingNewLoop(unsigned int iIteration)
 bool EcalTimingCalibProducer::addRecHit(const EcalRecHit& recHit)
 {
 	//check if rechit is valid
+    	int iRing = _ringTools.getRingIndexInSubdet(recHit.detid());
 	if(! recHit.checkFlags(_recHitFlags)) return false;
-	if( recHit.energy() < (_minRecHitEnergy+_minRecHitEnergyStep*_iter)) return false; 
+	float energyThreshold = recHit.detid().subdetId() == EcalBarrel ? 13*0.04 :  20 * (79.29 -4.148*iRing+0.2442*iRing*iRing )/1000 *4 ;
+
+	if( recHit.energy() < (energyThreshold)) return false; // minRecHitEnergy in ADC for EB
+	if( recHit.energy() < (energyThreshold+_minRecHitEnergyStep*_iter)) return false; 
 	if(recHit.detid().subdetId() == EcalEndcap && recHit.energy() < 2 * (_minRecHitEnergy+_minRecHitEnergyStep*_iter)) return false;
 
 	// add the EcalTimingEvent to the EcalCreateTimeCalibrations
@@ -222,18 +229,22 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 	iEvent.getByLabel(_ecalRecHitsEETAG, eeRecHitHandle);
 
 
-	_eventTimeMap.clear();
+	_eventTimeMap.clear(); // reset the map of time from recHits for this event
 
-	timeEB.clear();
-	timeEEM.clear();
-	timeEEP.clear();
+	// the following maps are used to:
+	//  - distinguish between beam1 and beam2 in splash events looking at the relative time shift
+	//  - adjust the global time offset if required (for splash events for example). 
+	//  The global time shift is set such that all the time measurements in the event are relative to one ring
+	timeEB.clear();  // reset the map for one ring in EB
+	timeEEM.clear(); // reset the map for one ring in EE-
+	timeEEP.clear(); // reset the map for one ring in EE+
 
 	// loop over the recHits and add those passing the selection to the list of recHits to be used for timing:  eventTimeMap
 	// recHit_itr is of type: edm::Handle<EcalRecHitCollection>::const_iterator
 	for(auto  recHit_itr = ebRecHitHandle->begin(); recHit_itr != ebRecHitHandle->end(); ++recHit_itr) {
 		addRecHit(*recHit_itr); // add the recHit to the list of recHits used for calibration (with the relative information)
 	}
-
+	
 	// same for EE
 	for(auto recHit_itr = eeRecHitHandle->begin(); recHit_itr != eeRecHitHandle->end(); ++recHit_itr) {
 		addRecHit(*recHit_itr); // add the recHit to the list of recHits used for calibration (with the relative information)
@@ -247,12 +258,12 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 		  << "\t" << timeEEP.num() 
 		  << std::endl;
 #endif
-	// If we got less than the minimum recHits, continue
+	// If we got less than the minimum recHits, continue -> this is to select events with enough activity
 	if(_eventTimeMap.size() < _recHitMin) return kContinue;
 #ifdef DEBUG
 	std::cout << "[DUMP]\t" << timeEB << "\t"  << timeEEM << "\t" << timeEEP << std::endl;
 #endif
-	// Make a new directory for Histograms for each event
+	// Make a new directory for Histograms for each event if you want plots per event
 	char eventDirName[100];
 	if(_makeEventPlots) {
 	     sprintf(eventDirName, "Event_%d", int(iEvent.id().event()) );
@@ -281,6 +292,16 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 #endif
 			continue;
 		}
+
+
+		if(it.first.rawId() == EBCRYex) timeEBCRYex.add(event);
+		else if(it.first.rawId() == EECRYex) timeEECRYex.add(event);
+		
+		int iRing = _ringTools.getRingIndexInSubdet(it.first);
+		
+		if(it.first.subdetId()==EcalBarrel && iRing==EBRING) timeEBRing.add(event);
+		if(it.first.subdetId()==EcalEndcap && iRing==EEmRING) timeEEmRing.add(event);
+		else if(it.first.subdetId()==EcalEndcap && iRing==EEpRING) timeEEpRing.add(event);
 
 		if(_makeEventPlots) plotRecHit(event);
 		_timeCalibMap[it.first].add(event);
@@ -357,6 +378,17 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 	sprintf(filename, "%s-corr-%d.dat", _outputDumpFileName.substr(0, _outputDumpFileName.find(".root")).c_str(), iLoop_); //text file holding constants
 	dumpCorrections(filename);
 	// save the xml
+
+	
+	timeEBRing.dumpToTree(timeEBRingTree,   EBRING,  0, -2);
+	timeEEmRing.dumpToTree(timeEEmRingTree, EEmRING, 0, -10);
+	timeEEpRing.dumpToTree(timeEEpRingTree, EEpRING, 0, 10);
+	
+	EBDetId eb(EBCRYex);
+	EEDetId ee(EECRYex);
+	timeEBCRYex.dumpToTree(timeEBCRYexTree, eb.ieta(), eb.iphi(), 0);
+	timeEECRYex.dumpToTree(timeEECRYexTree, ee.ix(), ee.iy(), ee.zside());
+
 
 	if(iLoop_ >= _maxLoop - 1) return kStop;
 	++iLoop_;
@@ -474,6 +506,7 @@ void EcalTimingCalibProducer::initEventHists(TFileDirectory fdir)
 	Event_TimeMapEEM_OOT  = fdir.make<TProfile2D>("TimeMapEEM_OOT", "Time[ns] map EE-;ix;iy; Time[ns]",        100, 1, 101, 100, 1, 101);
 }
 
+
 //
 void EcalTimingCalibProducer::initHists(TFileDirectory fdir)
 {
@@ -514,6 +547,16 @@ void EcalTimingCalibProducer::initHists(TFileDirectory fdir)
 			_noisyXtalsHists.push_back(dir.make<TH1F>(name,name,21,-10,11));
 		}
 	}
+}
+
+//
+void EcalTimingCalibProducer::initTree(TFileDirectory fdir)
+{
+	timeEBCRYexTree = fdir.make<TTree>("timeEBCRYex", "");
+	timeEECRYexTree = fdir.make<TTree>("timeEECRYex", "");
+	timeEBRingTree = fdir.make<TTree>("timeEBRingTree", "");
+	timeEEmRingTree = fdir.make<TTree>("timeEEmRingTree", "");
+	timeEEpRingTree = fdir.make<TTree>("timeEEpRingTree", "");
 }
 
 //define this as a plug-in
