@@ -102,7 +102,7 @@ process.load("FWCore.Modules.preScaler_cfi")
 process.preScaler.prescaleFactor = 1
 ## GlobalTag Conditions Related
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'GR_P_V56', '') #run2_data', '')
 
 ## Process Digi To Raw Step
 process.digiStep = cms.Sequence(process.ecalDigis  + process.ecalPreshowerDigis)

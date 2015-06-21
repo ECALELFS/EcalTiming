@@ -132,11 +132,11 @@ bool EcalTimingCalibProducer::addRecHit(const EcalRecHit& recHit)
 	//check if rechit is valid
     	int iRing = _ringTools.getRingIndexInSubdet(recHit.detid());
 	if(! recHit.checkFlags(_recHitFlags)) return false;
-	float energyThreshold = recHit.detid().subdetId() == EcalBarrel ? 13*0.04 :  20 * (79.29 -4.148*iRing+0.2442*iRing*iRing )/1000 *4 ;
+	float energyThreshold = recHit.detid().subdetId() == EcalBarrel ? 20*0.04 :  20 * (79.29 -4.148*iRing+0.2442*iRing*iRing )/1000 ;
 
 	if( recHit.energy() < (energyThreshold)) return false; // minRecHitEnergy in ADC for EB
 	if( recHit.energy() < (energyThreshold+_minRecHitEnergyStep*_iter)) return false; 
-	if(recHit.detid().subdetId() == EcalEndcap && recHit.energy() < 2 * (_minRecHitEnergy+_minRecHitEnergyStep*_iter)) return false;
+	//if(recHit.detid().subdetId() == EcalEndcap && recHit.energy() < 2 * (_minRecHitEnergy+_minRecHitEnergyStep*_iter)) return false;
 
 	// add the EcalTimingEvent to the EcalCreateTimeCalibrations
 	EcalTimingEvent timeEvent(recHit);
