@@ -39,10 +39,10 @@ EcalTimingCalibProducer::EcalTimingCalibProducer(const edm::ParameterSet& iConfi
 	_recHitFlags(iConfig.getParameter<std::vector<int> >("recHitFlags")),
 	_recHitMin(iConfig.getParameter<unsigned int>("recHitMinimumN")),
 
-	///\todo the min energy should be in ADC not in energy 
-        _minRecHitEnergy(iConfig.getParameter<double>("minRecHitEnergy")),
+	///\todo the min energy should be in ADC not in energy
+	_minRecHitEnergy(iConfig.getParameter<double>("minRecHitEnergy")),
 	_minRecHitEnergyStep(iConfig.getParameter<double>("minRecHitEnergyStep")),
-        _minEntries(iConfig.getParameter<unsigned int>("minEntries")),
+	_minEntries(iConfig.getParameter<unsigned int>("minEntries")),
 	_globalOffset(iConfig.getParameter<double>("globalOffset")),
 	_produceNewCalib(iConfig.getParameter<bool>("produceNewCalib")),
 	_outputDumpFileName(iConfig.getParameter<std::string>("outputDumpFile")),
@@ -53,7 +53,7 @@ EcalTimingCalibProducer::EcalTimingCalibProducer(const edm::ParameterSet& iConfi
 	//_ecalRecHitsEBToken = edm::consumes<EcalRecHitCollection>(iConfig.getParameter< edm::InputTag > ("ebRecHitsLabel"));
 	//the following line is needed to tell the framework what
 	// data is being produced
-	if(_produceNewCalib){
+	if(_produceNewCalib) {
 		setWhatProduced(this,  &EcalTimingCalibProducer::produceCalibConstants);
 //	setWhatProduced(this, &EcalTimingCalibProducer::produceCalibErrors);
 		setWhatProduced(this, &EcalTimingCalibProducer::produceOffsetConstant);
@@ -104,7 +104,7 @@ void EcalTimingCalibProducer::beginOfJob(const edm::EventSetup& iSetup)
 void EcalTimingCalibProducer::startingNewLoop(unsigned int iIteration)
 {
 	std::cout << "Starting new loop: " << iIteration << std::endl;
-/// save the iteration index 
+/// save the iteration index
 	_iter = iIteration;
 #ifdef DEBUG
 	auto calib2_itr = _calibConstants->find(RAWIDCRY); //begin();
@@ -127,44 +127,27 @@ void EcalTimingCalibProducer::startingNewLoop(unsigned int iIteration)
 }
 
 
-bool EcalTimingCalibProducer::addRecHit(const EcalRecHit& recHit)
+bool EcalTimingCalibProducer::addRecHit(const EcalRecHit& recHit, EventTimeMap& eventTimeMap_)
 {
 	//check if rechit is valid
-    	int iRing = _ringTools.getRingIndexInSubdet(recHit.detid());
 	if(! recHit.checkFlags(_recHitFlags)) return false;
-	float energyThreshold = recHit.detid().subdetId() == EcalBarrel ? 20*0.04 :  20 * (79.29 -4.148*iRing+0.2442*iRing*iRing )/1000 ;
+	int iRing = _ringTools.getRingIndexInSubdet(recHit.detid());
+	float energyThreshold = recHit.detid().subdetId() == EcalBarrel ? 20 * 0.04 :  20 * (79.29 - 4.148 * iRing + 0.2442 * iRing * iRing ) / 1000 ;
 
 	if( recHit.energy() < (energyThreshold)) return false; // minRecHitEnergy in ADC for EB
-	if( recHit.energy() < (energyThreshold+_minRecHitEnergyStep*_iter)) return false; 
+	if( recHit.energy() < (energyThreshold + _minRecHitEnergyStep * _iter)) return false;
 	//if(recHit.detid().subdetId() == EcalEndcap && recHit.energy() < 2 * (_minRecHitEnergy+_minRecHitEnergyStep*_iter)) return false;
 
 	// add the EcalTimingEvent to the EcalCreateTimeCalibrations
 	EcalTimingEvent timeEvent(recHit);
 	_eventTimeMap.emplace(recHit.detid(), timeEvent);
 
-	//Add the Time event to the Eta Ring Sums
-	if(recHit.detid().subdetId() == EcalBarrel) {
-		EBDetId id(recHit.detid());
-		if(id.ieta() == -75 && id.iphi() == 119) {
-			std::cout << "RawID\t" << id.rawId() << std::endl;
-			return false;
-		}
-		timeEB.add(timeEvent);
-	} else {
-		// create EEDetId
-		EEDetId id(recHit.detid());
-		if(id.zside() < 0) {
-			timeEEM.add(timeEvent);
-		} else {
-			timeEEP.add(timeEvent);
-		}
-	}
 
 	return true;
 }
 
 /**
-   fills the energy map and timing maps for EB, EE+ and EE- 
+   fills the energy map and timing maps for EB, EE+ and EE-
  */
 void EcalTimingCalibProducer::plotRecHit(const EcalTimingEvent& recHit)
 {
@@ -233,7 +216,7 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 
 	// the following maps are used to:
 	//  - distinguish between beam1 and beam2 in splash events looking at the relative time shift
-	//  - adjust the global time offset if required (for splash events for example). 
+	//  - adjust the global time offset if required (for splash events for example).
 	//  The global time shift is set such that all the time measurements in the event are relative to one ring
 	timeEB.clear();  // reset the map for one ring in EB
 	timeEEM.clear(); // reset the map for one ring in EE-
@@ -242,21 +225,37 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 	// loop over the recHits and add those passing the selection to the list of recHits to be used for timing:  eventTimeMap
 	// recHit_itr is of type: edm::Handle<EcalRecHitCollection>::const_iterator
 	for(auto  recHit_itr = ebRecHitHandle->begin(); recHit_itr != ebRecHitHandle->end(); ++recHit_itr) {
-		addRecHit(*recHit_itr); // add the recHit to the list of recHits used for calibration (with the relative information)
+		// add the recHit to the list of recHits used for calibration (with the relative information)
+		if(addRecHit(*recHit_itr, _timeCalibMap, iRing)) {
+			//EBDetId id(recHit.detid());
+			// if(id.ieta() == -75 && id.iphi() == 119) {
+			// 	std::cout << "RawID\t" << id.rawId() << std::endl;
+			// 	return false;
+			// }
+			timeEB.add(EcalTimingEvent(*recHit_itr));
+		}
 	}
-	
 	// same for EE
 	for(auto recHit_itr = eeRecHitHandle->begin(); recHit_itr != eeRecHitHandle->end(); ++recHit_itr) {
-		addRecHit(*recHit_itr); // add the recHit to the list of recHits used for calibration (with the relative information)
+		// add the recHit to the list of recHits used for calibration (with the relative information)
+		if(addRecHit(*recHit_itr, _timeCalibMap, iRing)) { // true if the recHit passes the selection and then added to the timeCalibMap
+			// create EEDetId
+			EEDetId id(recHit.detid());
+			if(id.zside() < 0) {
+				timeEEM.add(timeEvent);
+			} else {
+				timeEEP.add(timeEvent);
+			}
+		}
 	}
 
 #ifdef DEBUG
 	std::cout << "[DEBUG]" << "nRecHits passing selection"
-		  << "\t" << _eventTimeMap.size()
-		  << "\t" << timeEB.num() 
-		  << "\t" << timeEEM.num() 
-		  << "\t" << timeEEP.num() 
-		  << std::endl;
+	          << "\t" << _eventTimeMap.size()
+	          << "\t" << timeEB.num()
+	          << "\t" << timeEEM.num()
+	          << "\t" << timeEEP.num()
+	          << std::endl;
 #endif
 	// If we got less than the minimum recHits, continue -> this is to select events with enough activity
 	if(_eventTimeMap.size() < _recHitMin) return kContinue;
@@ -266,9 +265,9 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 	// Make a new directory for Histograms for each event if you want plots per event
 	char eventDirName[100];
 	if(_makeEventPlots) {
-	     sprintf(eventDirName, "Event_%d", int(iEvent.id().event()) );
-	     TFileDirectory eventDir = histDir_.mkdir(eventDirName);
-	     initEventHists(eventDir);
+		sprintf(eventDirName, "Event_%d", int(iEvent.id().event()) );
+		TFileDirectory eventDir = histDir_.mkdir(eventDirName);
+		initEventHists(eventDir);
 	}
 
 	// for splashes you want to distinguish between beam 1 and beam 2
@@ -280,28 +279,27 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 
 	// Add adjusted timeEvents to CorrectionsMap
 	for(auto const & it : _eventTimeMap) {
-	     // if it is a splash event, set a global offset shift such that the time is coherent between different events
+		// if it is a splash event, set a global offset shift such that the time is coherent between different events
 		EcalTimingEvent event = _isSplash ? correctGlobalOffset(it.second, splashDir, bunchCorr) : it.second;
 
 		// if it is a noisy and hit is out of time, skip it
 		auto find_it = std::find(_noisyXtals.begin(), _noisyXtals.end(), event.detid().rawId());
-		if(find_it != _noisyXtals.end() && abs(event.time()) > _noiseTimeThreshold)
-		{
+		if(find_it != _noisyXtals.end() && abs(event.time()) > _noiseTimeThreshold) {
 #ifdef DEBUG
 			std::cout << "Noisy: " << event.detid().rawId() << ' ' << event.time() << std::endl;
 #endif
 			continue;
 		}
 
-
+		// TTree for control/debug after calibration
 		if(it.first.rawId() == EBCRYex) timeEBCRYex.add(event);
 		else if(it.first.rawId() == EECRYex) timeEECRYex.add(event);
-		
+
 		int iRing = _ringTools.getRingIndexInSubdet(it.first);
-		
-		if(it.first.subdetId()==EcalBarrel && iRing==EBRING) timeEBRing.add(event);
-		if(it.first.subdetId()==EcalEndcap && iRing==EEmRING) timeEEmRing.add(event);
-		else if(it.first.subdetId()==EcalEndcap && iRing==EEpRING) timeEEpRing.add(event);
+
+		if(it.first.subdetId() == EcalBarrel && iRing == EBRING) timeEBRing.add(event);
+		if(it.first.subdetId() == EcalEndcap && iRing == EEmRING) timeEEmRing.add(event);
+		else if(it.first.subdetId() == EcalEndcap && iRing == EEpRING) timeEEpRing.add(event);
 
 		if(_makeEventPlots) plotRecHit(event);
 		_timeCalibMap[it.first].add(event);
@@ -323,47 +321,68 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::EventSetup&, unsigned int iLoop_)
 {
 	std::cout << "EndOfLoop " << std::endl;
+
+
 	// calculate the calibration constants
 
 	// set the values in _calibConstants, _calibErrors, _offsetConstant
-#ifdef DEBUG
-	auto calib2_itr = _calibConstants->find(RAWIDCRY); //begin();
-	std::cout << "index\tcalibConstants\ttimeCalibConstants: before setValue\n"
-	          << calib2_itr - _calibConstants->begin() << "\t" << *calib2_itr << "\t" << *(_timeCalibConstants.find(RAWIDCRY)) << "\t" << _calibConstants->size()
-	          << std::endl;
-	float debugCorrection;
-#endif
 
+	// remove the entries OOT (time > n_sigma)
+	float n_sigma = 2.; /// \todo remove hard coded number
 
 	for(auto calibRecHit_itr = _timeCalibMap.begin(); calibRecHit_itr != _timeCalibMap.end(); ++calibRecHit_itr) {
-	//for(auto  calibRecHit_itr : _timeCalibMap) {
 		FillCalibrationCorrectionHists(calibRecHit_itr); // histograms with shifts to be corrected at each step
-		float correction =  - calibRecHit_itr->second.mean();
-#ifdef DEBUG
-		if(calibRecHit_itr->first.rawId() == RAWIDCRY) debugCorrection = correction;
-#endif
+		float correction =  - calibRecHit_itr->second.getMeanWithinNSigma(n_sigma);  // to reject tails
 		_timeCalibConstants.setValue(calibRecHit_itr->first.rawId(), (*_calibConstants)[calibRecHit_itr->first.rawId()] + correction);
-		//_calibConstants->setValue(calibRecHit_itr->first.rawId(), *(_calibConstants->find(calibRecHit_itr->first.rawId()))+1);
-		//_timeCalibConstants.setValue(calibRecHit_itr->first.rawId(), *(_timeCalibConstants.find(calibRecHit_itr->first.rawId()))+1);
+
+		// check the asymmetry of the distribution: if asymmetric, dump the full set of events for further offline studies
+		if(calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma) > _maxSkewnessForDump)  {
+			int ix, iy, iz;
+			if(calibRecHit_itr->first.detid().subdetId() == EcalBarrel) {
+				EBDetId id(calibRecHit_itr->first.detid());
+				ix = id.ieta();
+				iy = id.iphi();
+				iz = 0;
+			} else {
+				EEDetId id(calibRecHit_itr->first.detid());
+				ix = id.ix();
+				iy = id.iy();
+				iz = id.zside();
+			}
+			calibRecHit_itr.second.dumpToTree(_highSkewnessTree, ix, iy, iz);
+		}
+
+		// check if result is stable as function of energy
+		/// \todo make all these parameters
+		if(! calibRecHit_itr->second.isStableInEnergy(_minRecHitEnergy, _minRecHitEnergy + _minRecHitEnergyStep * 10, _minRecHitEnergyStep)) {
+			int ix, iy, iz;
+			if(calibRecHit_itr->first.detid().subdetId() == EcalBarrel) {
+				EBDetId id(calibRecHit_itr->first.detid());
+				ix = id.ieta();
+				iy = id.iphi();
+				iz = 0;
+			} else {
+				EEDetId id(calibRecHit_itr->first.detid());
+				ix = id.ix();
+				iy = id.iy();
+				iz = id.zside();
+			}
+			calibRecHit_itr.second.dumpToTree(_unstableEnergyTree, ix, iy, iz);
+		}
+
 
 		// add filing Energy hists here
 	}
 
+
 	//Find noisy xtals
 	_noisyXtals.clear();
-	for(auto calibRecHit : _timeCalibMap) { 
-		if(calibRecHit.second.stdDev() > _noiseTimeThreshold)
-		{
+	for(auto calibRecHit : _timeCalibMap) {
+		if(calibRecHit.second.stdDev() > _noiseTimeThreshold) {
 			DetId id_ = calibRecHit.first;
 			_noisyXtals.push_back(id_.rawId());
 		}
 	}
-#ifdef DEBUG
-	calib2_itr = _calibConstants->find(RAWIDCRY);
-	std::cout << "index\tcalibConstants\ttimeCalibConstants: after setValue\n"
-	          << calib2_itr - _calibConstants->begin() << "\t" << *calib2_itr << "\t" << *(_timeCalibConstants.find(RAWIDCRY)) << "\t" << debugCorrection
-	          << std::endl;
-#endif
 
 	// save txt
 	time_t     now = time(0);
@@ -379,11 +398,11 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 	dumpCorrections(filename);
 	// save the xml
 
-	
+
 	timeEBRing.dumpToTree(timeEBRingTree,   EBRING,  0, -2);
 	timeEEmRing.dumpToTree(timeEEmRingTree, EEmRING, 0, -10);
 	timeEEpRing.dumpToTree(timeEEpRingTree, EEpRING, 0, 10);
-	
+
 	EBDetId eb(EBCRYex);
 	EEDetId ee(EECRYex);
 	timeEBCRYex.dumpToTree(timeEBCRYexTree, eb.ieta(), eb.iphi(), 0);
@@ -409,16 +428,16 @@ void EcalTimingCalibProducer::dumpCorrections(std::string filename)
 	// to make more efficient
 	for(auto calibRecHit_itr = _timeCalibMap.begin(); calibRecHit_itr != _timeCalibMap.end(); ++calibRecHit_itr) {
 		DetId id_ = calibRecHit_itr->first;
-		if(id_.subdetId()==EcalBarrel){
+		if(id_.subdetId() == EcalBarrel) {
 			EBDetId id(id_);
-			fout << id.ieta() << "\t" << id.iphi() << "\t" << 0 
-				 << "\t" << calibRecHit_itr->second.mean() << "\t" << calibRecHit_itr->second.stdDev() << "\t" << calibRecHit_itr->second.num() << "\t" << calibRecHit_itr->second.meanE() 
-				 << "\t" << id.rawId() << std::endl;
+			fout << id.ieta() << "\t" << id.iphi() << "\t" << 0
+			     << "\t" << calibRecHit_itr->second.mean() << "\t" << calibRecHit_itr->second.stdDev() << "\t" << calibRecHit_itr->second.num() << "\t" << calibRecHit_itr->second.meanE()
+			     << "\t" << id.rawId() << std::endl;
 		} else {
 			EEDetId id(id_);
-			fout << id.ix() << "\t" << id.iy() << "\t" << id.zside() 
-				 << "\t" << calibRecHit_itr->second.mean() << "\t" << calibRecHit_itr->second.stdDev() << "\t" << calibRecHit_itr->second.num() << "\t" << calibRecHit_itr->second.meanE() 
-				 << "\t" << id.rawId() << std::endl;
+			fout << id.ix() << "\t" << id.iy() << "\t" << id.zside()
+			     << "\t" << calibRecHit_itr->second.mean() << "\t" << calibRecHit_itr->second.stdDev() << "\t" << calibRecHit_itr->second.num() << "\t" << calibRecHit_itr->second.meanE()
+			     << "\t" << id.rawId() << std::endl;
 		}
 	}
 	fout.close();
@@ -531,20 +550,18 @@ void EcalTimingCalibProducer::initHists(TFileDirectory fdir)
 	RechitEneEEP_ = fdir.make<TH1F>("RechitEneEEP", "RecHit Energy[GeV] EE+;Rechit Energy[GeV]; Events", 200, 0.0, 100.0);
 	RechitEneEB_ = fdir.make<TH1F>("RechitEneEB", "RecHit Energy[GeV] EB;Rechit Energy[GeV]; Events", 200, 0.0, 100.0);
 
-	RechitEnergyTimeEEM = fdir.make<TH2F>("RechitEnergyTimeEEM", "RecHit Energy vs Time EE-;Rechit Energy[GeV]; Time[ns]; Events", 200, 0.0, 1000.0, 100, -15,30);
-	RechitEnergyTimeEEP = fdir.make<TH2F>("RechitEnergyTimeEEP", "RecHit Energy vs Time EE+;Rechit Energy[GeV]; Time[ns]; Events", 200, 0.0, 1000.0, 100, -15,30);
-	RechitEnergyTimeEB  = fdir.make<TH2F>("RechitEnergyTimeEB",  "RecHit Energy vs Time EB; Rechit Energy[GeV]; Time[ns]; Events", 200, 0.0, 100.0,  100, -15,30);
+	RechitEnergyTimeEEM = fdir.make<TH2F>("RechitEnergyTimeEEM", "RecHit Energy vs Time EE-;Rechit Energy[GeV]; Time[ns]; Events", 200, 0.0, 1000.0, 100, -15, 30);
+	RechitEnergyTimeEEP = fdir.make<TH2F>("RechitEnergyTimeEEP", "RecHit Energy vs Time EE+;Rechit Energy[GeV]; Time[ns]; Events", 200, 0.0, 1000.0, 100, -15, 30);
+	RechitEnergyTimeEB  = fdir.make<TH2F>("RechitEnergyTimeEB",  "RecHit Energy vs Time EB; Rechit Energy[GeV]; Time[ns]; Events", 200, 0.0, 100.0,  100, -15, 30);
 
-	if(_noisyXtals.size())
-	{
+	if(_noisyXtals.size()) {
 		_noisyXtalsHists.clear();
 		char histDirName[] = "noisyXtals";
 		TFileDirectory dir = fdir.mkdir( histDirName);
-		for(auto raw_id : _noisyXtals)
-		{
+		for(auto raw_id : _noisyXtals) {
 			char name[100];
 			sprintf(name, "xtal_%d", raw_id);
-			_noisyXtalsHists.push_back(dir.make<TH1F>(name,name,21,-10,11));
+			_noisyXtalsHists.push_back(dir.make<TH1F>(name, name, 21, -10, 11));
 		}
 	}
 }
@@ -552,11 +569,13 @@ void EcalTimingCalibProducer::initHists(TFileDirectory fdir)
 //
 void EcalTimingCalibProducer::initTree(TFileDirectory fdir)
 {
-	timeEBCRYexTree = fdir.make<TTree>("timeEBCRYex", "");
-	timeEECRYexTree = fdir.make<TTree>("timeEECRYex", "");
-	timeEBRingTree = fdir.make<TTree>("timeEBRingTree", "");
-	timeEEmRingTree = fdir.make<TTree>("timeEEmRingTree", "");
-	timeEEpRingTree = fdir.make<TTree>("timeEEpRingTree", "");
+	timeEBCRYexTree		= fdir.make<TTree>("timeEBCRYexTree", "");
+	timeEECRYexTree		= fdir.make<TTree>("timeEECRYexTree", "");
+	timeEBRingTree		= fdir.make<TTree>("timeEBRingTree", "");
+	timeEEmRingTree		= fdir.make<TTree>("timeEEmRingTree", "");
+	timeEEpRingTree		= fdir.make<TTree>("timeEEpRingTree", "");
+	_unstableEnergyTree	= fdir.make<TTree>("_unstableEnergyTree", "");
+	_highSkewnessTree	= fdir.make<TTree>("_highSkewnessTree", "");
 }
 
 //define this as a plug-in

@@ -2,13 +2,33 @@
 #define ecaltimingcalibproducer_h
 /** \class EcalTimingCalibProducer EcalTimingCalibProducer.h EcalTiming/EcalTiming/plugins/EcalTimingCalibProducer.h
     \brief Plugin that derives the calibration constants
- 
+
  This plugin runs over the events, selects the recHits according to the criteria defined in addRecHit
 
  \todo Exit condition based on convergence
 
 */
 
+
+/**
+   Module description:
+ - digi to calibrated recHit reconstruction
+ - selection of events with reasonable activity: minimum number of recHits
+ - select recHits based on:
+   - recoFlag -> only good recHits (exclude OOT pileup contribution with MultiFit)
+   - minimum energy, ring based threshold
+ - save all the time events (recHits) passing the selection
+ - discard those not within 2 sigma of the stdDev distribution for the single channel (then excluding OOT spurious events)
+ - exclude events with large time error (> 3ns) or null time error (==0 ns)
+ - verify that the distribution is symmetric
+ - check stability vs energy of the single channel within uncertainty
+ - save full dump of time events in TTree for further checks if:
+   - distribution not symmetric
+   - time calibration not stable vs energy
+ - calculate global time for EB, EE
+
+
+ */
 //#define DEBUG
 #define RAWIDCRY 838904321
 
@@ -106,8 +126,8 @@ class EcalTimingCalibProducer : public edm::ESProducerLooper
 {
 
 private:
-     EcalTimeCalibrationMap _timeCalibMap; ///< calibration map: contains the time shift for each crystal
-     EventTimeMap _eventTimeMap;           ///< container of recHits passing selection in the event (reset at each event)
+	EcalTimeCalibrationMap _timeCalibMap; ///< calibration map: contains the time shift for each crystal
+	EventTimeMap _eventTimeMap;           ///< container of recHits passing selection in the event (reset at each event)
 
 	// For finding averages for specific eta ring
 	EcalCrystalTimingCalibration timeEEP; ///< global time calibration of EE+
@@ -135,7 +155,7 @@ public:
 private:
 	// ----------member data ---------------------------
 	/** @name Input Parameters
-	 * Parameters defined in the config file _cfi,py 
+	 * Parameters defined in the config file _cfi,py
 	 */
 	///@{
 
@@ -147,8 +167,8 @@ private:
 	std::vector<int> _recHitFlags; ///< vector containing list of valid rec hit flags for calibration
 	unsigned int _recHitMin; ///< require at least this many rec hits to count the event
 	double       _minRecHitEnergy; ///< minimum energy for the recHit to be considered for timing studies
-     double _minRecHitEnergyStep; ///< at each iteration the code increases the minimum energy required for the calibration
-        unsigned int _minEntries; ///< require a minimum number of entries in a ring to do averages
+	double _minRecHitEnergyStep; ///< at each iteration the code increases the minimum energy required for the calibration
+	unsigned int _minEntries; ///< require a minimum number of entries in a ring to do averages
 	float        _globalOffset;    ///< time to subtract from every event
 	bool _produceNewCalib; ///< true if you don't want to use the values in DB and what to extract new absolute calibrations, if false iteration does not work
 	std::string _outputDumpFileName; ///< name of the output file for the calibration constants' dump
@@ -223,18 +243,19 @@ private:
 	}
 
 
-	
-/** 
-  \brief  If recHit passes the selection it is added to the list of recHits to be used for calibration
 
-  The recHit is used (accepted) if:
-    - recHit flag in the list of _recHitFlags defined in the config file
-    - recHit energy in EB > _minRecHitEnergy defined in the config file
-    - recHit energy in EE is x2 the threshold of EB
-    - at each iteration the recHit threshold is raised by _minRecHitEnergyStep
-    If the recHit is used, the time information is added to _eventTimeMap
-*/
-	bool addRecHit(const EcalRecHit& recHit);
+	/**
+	  \brief  If recHit passes the selection it is added to the list of recHits to be used for calibration
+
+	  The recHit is used (accepted) if:
+	    - recHit flag in the list of _recHitFlags defined in the config file
+	    - recHit energy in EB > _minRecHitEnergy defined in the config file
+	    - recHit energy in EE is x2 the threshold of EB
+	    - at each iteration the recHit threshold is raised by _minRecHitEnergyStep
+	    If the recHit is used, the time information is added to _eventTimeMap
+	*/
+	bool addRecHit(const EcalRecHit& recHit, EventTimeMap& eventTimeMap_);
+
 
 	/// Adds the recHit to the per Event histograms
 	void plotRecHit(const EcalTimingEvent& recHit);
@@ -250,6 +271,7 @@ private:
 	TFileDirectory histDir_;
 	// Tree
 	TTree *timeEBCRYexTree, *timeEECRYexTree, *timeEEpRingTree, *timeEEmRingTree, *timeEBRingTree;
+	TTree *_unstableEnergyTree, *_highSkewnessTree;
 
 	// Mean Histograms
 	TProfile2D* EneMapEEP_; /// Using TProfile2D so we don't paint empty bins.
@@ -296,7 +318,7 @@ private:
 
 	std::vector<int> _noisyXtals;
 	std::vector<TH1F*> _noisyXtalsHists;
-     unsigned int _iter;
+	unsigned int _iter;
 };
 
 #endif

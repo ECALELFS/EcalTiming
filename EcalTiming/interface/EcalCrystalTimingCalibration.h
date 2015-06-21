@@ -1,5 +1,4 @@
 #include "EcalTiming/EcalTiming/interface/EcalTimingEvent.h"
-#include <cassert>
 #include <vector>
 #include <TTree.h>
 
@@ -22,7 +21,10 @@ private:
 	float _sum2; ///< scalar sum of the square of the time of each timingEvent
 	unsigned long int _num; ///< number of timingEvents;
 
-	float _sumE;
+	float _sumE; ///< scalar sum of the energy of each timingEvent: needed for average energy
+
+	std::map<float> _sumWithinNSigma, _sum2WithinNSigma, _sum3WithinNSigma, _sumEWithinNSigma; ///< variables for calculation of mean, stdDev within n-times the origina stdDev (to remove tails)
+	std::map<unsigned int> _numWithinNSigma; ///< variables for calculation of mean, stdDev within n-times the origina stdDev (to remove tails)
 
 	std::vector<EcalTimingEvent> timingEvents; ///< vector containing  all the events for this crystal
 	std::vector<EcalTimingEvent>::iterator maxChi2Itr;
@@ -66,6 +68,9 @@ public:
 	/* } */
 	//float totalChi2;
 
+	float getMeanWithinNSigma(float sigma); ///< returns the mean time within abs(mean+ n * stdDev) to reject tails
+	float getStdDevWithinNSigma(float sigma); ///< returns the stdDev calculated within abs(mean+ n * stdDev) to reject tails
+	float getSkewnessWithinNSigma(float sigma); ///< returns the skewness calculated within abs(mean+ n * stdDev) to reject tails
 
 	friend std::ostream& operator<< (std::ostream& os, const EcalCrystalTimingCalibration& s)
 	{
@@ -80,39 +85,31 @@ public:
 	}
 	inline void clear()
 	{
-	_sum = 0.0f;
-	_sum2 = 0.0f;
-	_num = 0;
-	_sumE = 0.0f;
+		_sum = 0.0f;
+		_sum2 = 0.0f;
+		_num = 0;
+		_sumE = 0.0f;
+		_sumWithinNSigma.clear();
+		_sum2WithinNSigma.clear();
+		_sum3WithinNSigma.clear();
+		_numWithinNSigma.clear();
 
-	timingEvents.clear();
+		timingEvents.clear();
 	}
 
-	/// need an empty tree
-	void dumpToTree(TTree *tree, int ix_, int iy_, int iz_){
-		assert(tree->GetEntries()==0);
-		Float_t time, timeError, energy;
-		Int_t ix=ix_, iy=iy_, iz=iz_;
-		tree->Branch("ix", &ix, "ix/I");
-		tree->Branch("iy", &iy, "iy/I");
-		tree->Branch("iz", &iz, "iz/I");
-		tree->Branch("time", &time, "time/F");
-		tree->Branch("timeError", &timeError, "timeError/F");
-		tree->Branch("energy", &energy, "energy/F");
+	void dumpToTree(TTree *tree, int ix_, int iy_, int iz_); ///< dump the full set of events in a TTree:  need an empty tree
 
-		for(auto te : timingEvents){
-			time = te.time();
-			energy = te.energy();
-			timeError = te.timeError();
-			tree->Fill();
-		}
-	}		
+	/// checks if the time measurement is stable changing the min energy threshold
+	bool isStableInEnergy(float min, float max, float step);
 
 private:
+	float calcAllWithinNSigma(float n_sigma); ///< calculate sum, sum2, sum3, n for time if time within n x stdDev and store the result
+	// since the values are stored, the calculation is done only once with only one loop over the events
+
 	/// \todo weighted average by timeError
 	bool insertEvent(EcalTimingEvent te_)
 	{
-		if(true || te_.timeError() > 0) {
+		if(te_.timeError() > 0 && te_.timeError < 1000) { //exclude values with wrong timeError estimation
 			_sum += te_.time();
 			_sum2 += te_.time() * te_.time();
 			_sumE += te_.energy();
