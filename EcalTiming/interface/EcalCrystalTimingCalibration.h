@@ -109,7 +109,7 @@ private:
 	/// \todo weighted average by timeError
 	bool insertEvent(EcalTimingEvent te_)
 	{
-		if(te_.timeError() > 0 && te_.timeError < 1000) { //exclude values with wrong timeError estimation
+		if(te_.timeError() > 0 && te_.timeError < 1000 && te_.timeError<3) { //exclude values with wrong timeError estimation
 			_sum += te_.time();
 			_sum2 += te_.time() * te_.time();
 			_sumE += te_.energy();
