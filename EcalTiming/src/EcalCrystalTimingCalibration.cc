@@ -20,7 +20,7 @@ float EcalCrystalTimingCalibration::getSkewnessWithinNSigma(float n_sigma)
 
 	float mean = getMeanWithinNSigma(n_sigma); //variables are calculated by that
 	float stdDev = getStdDevWithinNSigma(n_sigma);
-	return pow( (_sum3WithinNSigma[n_sigma] - 3 * mean * stdDev * stdDev - mean * mean * mean) / (stdDev * stdDev * stdDev), 1. / 3);
+	return (_sum3WithinNSigma[n_sigma]/_numWithinNSigma[n_sigma] - 3 * mean * stdDev * stdDev - mean * mean * mean) / (stdDev * stdDev * stdDev);
 
 }
 
