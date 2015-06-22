@@ -336,8 +336,10 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 		float correction =  - calibRecHit_itr->second.getMeanWithinNSigma(n_sigma);  // to reject tails
 		_timeCalibConstants.setValue(calibRecHit_itr->first.rawId(), (*_calibConstants)[calibRecHit_itr->first.rawId()] + correction);
 
+		if(calibRecHit_itr->second.num()>50){
 		// check the asymmetry of the distribution: if asymmetric, dump the full set of events for further offline studies
-		if(calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma) > _maxSkewnessForDump)  {
+		if(fabs(calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma)) > _maxSkewnessForDump)  {
+			std::cout << "" << calibRecHit_itr->first.rawId() << "\t" << "dump for skewness " << calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma) << std::endl;
 			int ix, iy, iz;
 			if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
 				EBDetId id(calibRecHit_itr->first);
@@ -356,6 +358,7 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 		// check if result is stable as function of energy
 		/// \todo make all these parameters
 		if(! calibRecHit_itr->second.isStableInEnergy(_minRecHitEnergy, _minRecHitEnergy + _minRecHitEnergyStep * 10, _minRecHitEnergyStep)) {
+			std::cout << calibRecHit_itr->first.rawId() << "\t" << "dump for unstable energy" << std::endl;
 			int ix, iy, iz;
 			if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
 				EBDetId id(calibRecHit_itr->first);
@@ -370,7 +373,7 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 			}
 			calibRecHit_itr->second.dumpToTree(_unstableEnergyTree, ix, iy, iz);
 		}
-
+		}
 
 		// add filing Energy hists here
 	}

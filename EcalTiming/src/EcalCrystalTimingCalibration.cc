@@ -88,15 +88,26 @@ bool EcalCrystalTimingCalibration::isStableInEnergy(float min, float max, float 
 
 void EcalCrystalTimingCalibration::dumpToTree(TTree *tree, int ix_, int iy_, int iz_)
 {
-	assert(tree->GetEntries() == 0);
+     //assert(tree->GetEntries() == 0);
 	Float_t time, timeError, energy;
 	Int_t ix = ix_, iy = iy_, iz = iz_;
-	tree->Branch("ix", &ix, "ix/I");
-	tree->Branch("iy", &iy, "iy/I");
-	tree->Branch("iz", &iz, "iz/I");
-	tree->Branch("time", &time, "time/F");
-	tree->Branch("timeError", &timeError, "timeError/F");
-	tree->Branch("energy", &energy, "energy/F");
+	if(tree->GetBranch("ix")==NULL) tree->Branch("ix", &ix, "ix/I");
+	else tree->SetBranchAddress("ix", &ix);
+
+	if(tree->GetBranch("iy")==NULL) tree->Branch("iy", &iy, "iy/I");
+	else tree->SetBranchAddress("iy", &iy);
+
+	if(tree->GetBranch("iz")==NULL) tree->Branch("iz", &iz, "iz/I");
+	else tree->SetBranchAddress("iz", &iz);
+
+	if(tree->GetBranch("time")==NULL) tree->Branch("time", &time, "time/F");
+	else tree->SetBranchAddress("time", &time);
+
+	if(tree->GetBranch("timeError")==NULL) tree->Branch("timeError", &timeError, "timeError/F");
+	tree->SetBranchAddress("timeError", &timeError);
+
+	if(tree->GetBranch("energy")==NULL) tree->Branch("energy", &energy, "energy/F");
+	tree->SetBranchAddress("energy", &energy);
 
 	for(auto te : timingEvents) {
 		time = te.time();

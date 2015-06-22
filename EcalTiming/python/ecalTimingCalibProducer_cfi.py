@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 looper = cms.Looper("EcalTimingCalibProducer",
-                    maxLoop = cms.uint32(2),
+                    maxLoop = cms.uint32(1),
                     isSplash = cms.bool(False),
                     makeEventPlots = cms.bool(False),
                     recHitEBCollection = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
@@ -17,4 +17,5 @@ looper = cms.Looper("EcalTimingCalibProducer",
                     outputDumpFile = cms.string('output.dat'),
                     noiseRMSThreshold = cms.double(0.5),
                     noiseTimeThreshold = cms.double(6.0),
+                    maxSkewnessForDump = cms.double(2),
                     )
