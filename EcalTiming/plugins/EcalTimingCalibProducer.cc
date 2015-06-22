@@ -48,7 +48,7 @@ EcalTimingCalibProducer::EcalTimingCalibProducer(const edm::ParameterSet& iConfi
 	_outputDumpFileName(iConfig.getParameter<std::string>("outputDumpFile")),
 	_noiseRMSThreshold(iConfig.getParameter<double>("noiseRMSThreshold")),
 	_noiseTimeThreshold(iConfig.getParameter<double>("noiseTimeThreshold")),
-     _maxSkewnessForDump(iConfig.getParameter<double>("maxSkewnessForDump")),
+	_maxSkewnessForDump(iConfig.getParameter<double>("maxSkewnessForDump")),
 	_ringTools(EcalRingCalibrationTools())
 {
 	//_ecalRecHitsEBToken = edm::consumes<EcalRecHitCollection>(iConfig.getParameter< edm::InputTag > ("ebRecHitsLabel"));
@@ -227,7 +227,7 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 	// recHit_itr is of type: edm::Handle<EcalRecHitCollection>::const_iterator
 	for(auto  recHit_itr = ebRecHitHandle->begin(); recHit_itr != ebRecHitHandle->end(); ++recHit_itr) {
 		// add the recHit to the list of recHits used for calibration (with the relative information)
-	     if(addRecHit(*recHit_itr, _eventTimeMap)){
+		if(addRecHit(*recHit_itr, _eventTimeMap)) {
 			//EBDetId id(recHit.detid());
 			// if(id.ieta() == -75 && id.iphi() == 119) {
 			// 	std::cout << "RawID\t" << id.rawId() << std::endl;
@@ -243,9 +243,9 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 			// create EEDetId
 			EEDetId id(recHit_itr->detid());
 			if(id.zside() < 0) {
-			     timeEEM.add(EcalTimingEvent(*recHit_itr));
+				timeEEM.add(EcalTimingEvent(*recHit_itr));
 			} else {
-			     timeEEP.add(EcalTimingEvent(*recHit_itr));
+				timeEEP.add(EcalTimingEvent(*recHit_itr));
 			}
 		}
 	}
@@ -333,46 +333,47 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 
 	for(auto calibRecHit_itr = _timeCalibMap.begin(); calibRecHit_itr != _timeCalibMap.end(); ++calibRecHit_itr) {
 		FillCalibrationCorrectionHists(calibRecHit_itr); // histograms with shifts to be corrected at each step
-		float correction =  - calibRecHit_itr->second.getMeanWithinNSigma(n_sigma);  // to reject tails
+		float correction =  - calibRecHit_itr->second.getMeanWithinNSigma(n_sigma, 10);  // to reject tails
 		_timeCalibConstants.setValue(calibRecHit_itr->first.rawId(), (*_calibConstants)[calibRecHit_itr->first.rawId()] + correction);
 
-		if(calibRecHit_itr->second.num()>50){
-		// check the asymmetry of the distribution: if asymmetric, dump the full set of events for further offline studies
-		if(fabs(calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma)) > _maxSkewnessForDump)  {
-			std::cout << "" << calibRecHit_itr->first.rawId() << "\t" << "dump for skewness " << calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma) << std::endl;
-			int ix, iy, iz;
-			if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
-				EBDetId id(calibRecHit_itr->first);
-				ix = id.ieta();
-				iy = id.iphi();
-				iz = 0;
-			} else {
-				EEDetId id(calibRecHit_itr->first);
-				ix = id.ix();
-				iy = id.iy();
-				iz = id.zside();
-			}
-			calibRecHit_itr->second.dumpToTree(_highSkewnessTree, ix, iy, iz);
-		}
+		if(calibRecHit_itr->second.num() > 50) {
+			// check the asymmetry of the distribution: if asymmetric, dump the full set of events for further offline studies
+			if(fabs(calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma, 10)) > _maxSkewnessForDump)  {
+				std::cout << "" << calibRecHit_itr->first.rawId() << "\t" << "dump for skewness " << calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma, 10) << std::endl;
+				int ix, iy, iz;
+				if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
+					EBDetId id(calibRecHit_itr->first);
+					ix = id.ieta();
+					iy = id.iphi();
+					iz = 0;
+				} else {
+					EEDetId id(calibRecHit_itr->first);
+					ix = id.ix();
+					iy = id.iy();
+					iz = id.zside();
+				}
+				calibRecHit_itr->second.dumpToTree(_highSkewnessTree, ix, iy, iz);
+			} else { // get the dump only once
 
-		// check if result is stable as function of energy
-		/// \todo make all these parameters
-		if(! calibRecHit_itr->second.isStableInEnergy(_minRecHitEnergy, _minRecHitEnergy + _minRecHitEnergyStep * 10, _minRecHitEnergyStep)) {
-			std::cout << calibRecHit_itr->first.rawId() << "\t" << "dump for unstable energy" << std::endl;
-			int ix, iy, iz;
-			if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
-				EBDetId id(calibRecHit_itr->first);
-				ix = id.ieta();
-				iy = id.iphi();
-				iz = 0;
-			} else {
-				EEDetId id(calibRecHit_itr->first);
-				ix = id.ix();
-				iy = id.iy();
-				iz = id.zside();
+				// check if result is stable as function of energy
+				/// \todo make all these parameters
+				if(! calibRecHit_itr->second.isStableInEnergy(_minRecHitEnergy, _minRecHitEnergy + _minRecHitEnergyStep * 10, _minRecHitEnergyStep)) {
+					std::cout << calibRecHit_itr->first.rawId() << "\t" << "dump for unstable energy" << std::endl;
+					int ix, iy, iz;
+					if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
+						EBDetId id(calibRecHit_itr->first);
+						ix = id.ieta();
+						iy = id.iphi();
+						iz = 0;
+					} else {
+						EEDetId id(calibRecHit_itr->first);
+						ix = id.ix();
+						iy = id.iy();
+						iz = id.zside();
+					}
+					calibRecHit_itr->second.dumpToTree(_unstableEnergyTree, ix, iy, iz);
+				}
 			}
-			calibRecHit_itr->second.dumpToTree(_unstableEnergyTree, ix, iy, iz);
-		}
 		}
 
 		// add filing Energy hists here

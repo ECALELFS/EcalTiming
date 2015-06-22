@@ -68,9 +68,9 @@ public:
 	/* } */
 	//float totalChi2;
 
-	float getMeanWithinNSigma(float sigma); ///< returns the mean time within abs(mean+ n * stdDev) to reject tails
-	float getStdDevWithinNSigma(float sigma); ///< returns the stdDev calculated within abs(mean+ n * stdDev) to reject tails
-	float getSkewnessWithinNSigma(float sigma); ///< returns the skewness calculated within abs(mean+ n * stdDev) to reject tails
+	float getMeanWithinNSigma(float sigma, float maxRange); ///< returns the mean time within abs(mean+ n * stdDev) to reject tails
+	float getStdDevWithinNSigma(float sigma, float maxRange); ///< returns the stdDev calculated within abs(mean+ n * stdDev) to reject tails
+	float getSkewnessWithinNSigma(float sigma, float maxRange); ///< returns the skewness calculated within abs(mean+ n * stdDev) to reject tails
 
 	friend std::ostream& operator<< (std::ostream& os, const EcalCrystalTimingCalibration& s)
 	{
@@ -103,13 +103,13 @@ public:
 	bool isStableInEnergy(float min, float max, float step);
 
 private:
-	void calcAllWithinNSigma(float n_sigma); ///< calculate sum, sum2, sum3, n for time if time within n x stdDev and store the result
+	void calcAllWithinNSigma(float n_sigma, float maxRange = 10); ///< calculate sum, sum2, sum3, n for time if time within n x stdDev and store the result
 	// since the values are stored, the calculation is done only once with only one loop over the events
 
 	/// \todo weighted average by timeError
 	bool insertEvent(EcalTimingEvent te_)
 	{
-		if(te_.timeError() > 0 && te_.timeError() < 1000 && te_.timeError()<3) { //exclude values with wrong timeError estimation
+		if(te_.timeError() > 0 && te_.timeError() < 1000 && te_.timeError() < 3) { //exclude values with wrong timeError estimation
 			_sum += te_.time();
 			_sum2 += te_.time() * te_.time();
 			_sumE += te_.energy();
