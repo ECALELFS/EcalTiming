@@ -12,7 +12,6 @@
 <use   name="RecoEcal/EgammaClusterProducers"/>
 <use   name="Geometry/EcalMapping"/>
 <use   name="Geometry/CaloGeometry"/>
-<use   name="DataFormats/PatCandidates"/>
 <use   name="RecoTracker/TrackProducer"/>
 <use   name="Geometry/CommonDetUnit"/>
 <use   name="Geometry/TrackerGeometryBuilder"/>
@@ -25,3 +24,6 @@
 <use   name="root"/>
 <lib   name="Minuit"/>
 <use   name="clhep"/>
+<export> 
+  <lib   name="1"/>
+</export>
