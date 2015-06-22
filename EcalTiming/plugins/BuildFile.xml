@@ -9,3 +9,4 @@
 <use   name="clhep"/>
 <use   name="root"/>
 <use   name="xerces-c"/>
+<use   name="EcalTiming/EcalTiming"/>

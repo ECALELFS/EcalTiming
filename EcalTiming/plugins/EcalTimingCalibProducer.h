@@ -174,7 +174,7 @@ private:
 	std::string _outputDumpFileName; ///< name of the output file for the calibration constants' dump
 	float _noiseRMSThreshold;
 	float _noiseTimeThreshold;
-
+	float _maxSkewnessForDump;
 /// @}
 
 	void dumpCalibration(std::string filename);

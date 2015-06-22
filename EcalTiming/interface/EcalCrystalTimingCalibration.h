@@ -23,8 +23,8 @@ private:
 
 	float _sumE; ///< scalar sum of the energy of each timingEvent: needed for average energy
 
-	std::map<float> _sumWithinNSigma, _sum2WithinNSigma, _sum3WithinNSigma, _sumEWithinNSigma; ///< variables for calculation of mean, stdDev within n-times the origina stdDev (to remove tails)
-	std::map<unsigned int> _numWithinNSigma; ///< variables for calculation of mean, stdDev within n-times the origina stdDev (to remove tails)
+	std::map<float, float> _sumWithinNSigma, _sum2WithinNSigma, _sum3WithinNSigma, _sumEWithinNSigma; ///< variables for calculation of mean, stdDev within n-times the origina stdDev (to remove tails)
+	std::map<float, unsigned int> _numWithinNSigma; ///< variables for calculation of mean, stdDev within n-times the origina stdDev (to remove tails)
 
 	std::vector<EcalTimingEvent> timingEvents; ///< vector containing  all the events for this crystal
 	std::vector<EcalTimingEvent>::iterator maxChi2Itr;
@@ -103,13 +103,13 @@ public:
 	bool isStableInEnergy(float min, float max, float step);
 
 private:
-	float calcAllWithinNSigma(float n_sigma); ///< calculate sum, sum2, sum3, n for time if time within n x stdDev and store the result
+	void calcAllWithinNSigma(float n_sigma); ///< calculate sum, sum2, sum3, n for time if time within n x stdDev and store the result
 	// since the values are stored, the calculation is done only once with only one loop over the events
 
 	/// \todo weighted average by timeError
 	bool insertEvent(EcalTimingEvent te_)
 	{
-		if(te_.timeError() > 0 && te_.timeError < 1000 && te_.timeError<3) { //exclude values with wrong timeError estimation
+		if(te_.timeError() > 0 && te_.timeError() < 1000 && te_.timeError()<3) { //exclude values with wrong timeError estimation
 			_sum += te_.time();
 			_sum2 += te_.time() * te_.time();
 			_sumE += te_.energy();

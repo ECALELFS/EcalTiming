@@ -48,6 +48,7 @@ EcalTimingCalibProducer::EcalTimingCalibProducer(const edm::ParameterSet& iConfi
 	_outputDumpFileName(iConfig.getParameter<std::string>("outputDumpFile")),
 	_noiseRMSThreshold(iConfig.getParameter<double>("noiseRMSThreshold")),
 	_noiseTimeThreshold(iConfig.getParameter<double>("noiseTimeThreshold")),
+     _maxSkewnessForDump(iConfig.getParameter<double>("maxSkewnessForDump")),
 	_ringTools(EcalRingCalibrationTools())
 {
 	//_ecalRecHitsEBToken = edm::consumes<EcalRecHitCollection>(iConfig.getParameter< edm::InputTag > ("ebRecHitsLabel"));
@@ -226,7 +227,7 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 	// recHit_itr is of type: edm::Handle<EcalRecHitCollection>::const_iterator
 	for(auto  recHit_itr = ebRecHitHandle->begin(); recHit_itr != ebRecHitHandle->end(); ++recHit_itr) {
 		// add the recHit to the list of recHits used for calibration (with the relative information)
-		if(addRecHit(*recHit_itr, _timeCalibMap, iRing)) {
+	     if(addRecHit(*recHit_itr, _eventTimeMap)){
 			//EBDetId id(recHit.detid());
 			// if(id.ieta() == -75 && id.iphi() == 119) {
 			// 	std::cout << "RawID\t" << id.rawId() << std::endl;
@@ -238,13 +239,13 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::duringLoop(const edm::E
 	// same for EE
 	for(auto recHit_itr = eeRecHitHandle->begin(); recHit_itr != eeRecHitHandle->end(); ++recHit_itr) {
 		// add the recHit to the list of recHits used for calibration (with the relative information)
-		if(addRecHit(*recHit_itr, _timeCalibMap, iRing)) { // true if the recHit passes the selection and then added to the timeCalibMap
+		if(addRecHit(*recHit_itr, _eventTimeMap)) { // true if the recHit passes the selection and then added to the timeCalibMap
 			// create EEDetId
-			EEDetId id(recHit.detid());
+			EEDetId id(recHit_itr->detid());
 			if(id.zside() < 0) {
-				timeEEM.add(timeEvent);
+			     timeEEM.add(EcalTimingEvent(*recHit_itr));
 			} else {
-				timeEEP.add(timeEvent);
+			     timeEEP.add(EcalTimingEvent(*recHit_itr));
 			}
 		}
 	}
@@ -338,36 +339,36 @@ EcalTimingCalibProducer::Status EcalTimingCalibProducer::endOfLoop(const edm::Ev
 		// check the asymmetry of the distribution: if asymmetric, dump the full set of events for further offline studies
 		if(calibRecHit_itr->second.getSkewnessWithinNSigma(n_sigma) > _maxSkewnessForDump)  {
 			int ix, iy, iz;
-			if(calibRecHit_itr->first.detid().subdetId() == EcalBarrel) {
-				EBDetId id(calibRecHit_itr->first.detid());
+			if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
+				EBDetId id(calibRecHit_itr->first);
 				ix = id.ieta();
 				iy = id.iphi();
 				iz = 0;
 			} else {
-				EEDetId id(calibRecHit_itr->first.detid());
+				EEDetId id(calibRecHit_itr->first);
 				ix = id.ix();
 				iy = id.iy();
 				iz = id.zside();
 			}
-			calibRecHit_itr.second.dumpToTree(_highSkewnessTree, ix, iy, iz);
+			calibRecHit_itr->second.dumpToTree(_highSkewnessTree, ix, iy, iz);
 		}
 
 		// check if result is stable as function of energy
 		/// \todo make all these parameters
 		if(! calibRecHit_itr->second.isStableInEnergy(_minRecHitEnergy, _minRecHitEnergy + _minRecHitEnergyStep * 10, _minRecHitEnergyStep)) {
 			int ix, iy, iz;
-			if(calibRecHit_itr->first.detid().subdetId() == EcalBarrel) {
-				EBDetId id(calibRecHit_itr->first.detid());
+			if(calibRecHit_itr->first.subdetId() == EcalBarrel) {
+				EBDetId id(calibRecHit_itr->first);
 				ix = id.ieta();
 				iy = id.iphi();
 				iz = 0;
 			} else {
-				EEDetId id(calibRecHit_itr->first.detid());
+				EEDetId id(calibRecHit_itr->first);
 				ix = id.ix();
 				iy = id.iy();
 				iz = id.zside();
 			}
-			calibRecHit_itr.second.dumpToTree(_unstableEnergyTree, ix, iy, iz);
+			calibRecHit_itr->second.dumpToTree(_unstableEnergyTree, ix, iy, iz);
 		}
 
 

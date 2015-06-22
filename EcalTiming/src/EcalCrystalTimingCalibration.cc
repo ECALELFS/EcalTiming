@@ -19,13 +19,14 @@ float EcalCrystalTimingCalibration::getSkewnessWithinNSigma(float n_sigma)
 {
 
 	float mean = getMeanWithinNSigma(n_sigma); //variables are calculated by that
+	float stdDev = getStdDevWithinNSigma(n_sigma);
 	return pow( (_sum3WithinNSigma[n_sigma] - 3 * mean * stdDev * stdDev - mean * mean * mean) / (stdDev * stdDev * stdDev), 1. / 3);
 
 }
 
 
 // store the results such that you do only one loop over the events
-float EcalCrystalTimingCalibration::calcAllWithinNSigma(float n_sigma)
+void EcalCrystalTimingCalibration::calcAllWithinNSigma(float n_sigma)
 {
 	float range = stdDev() * n_sigma;
 
@@ -35,14 +36,14 @@ float EcalCrystalTimingCalibration::calcAllWithinNSigma(float n_sigma)
 	_numWithinNSigma[n_sigma] = 0.;
 
 	for(auto te : timingEvents) {
-		if(fabs(te.time() - te.mean()) < range) {
+		if(fabs(te.time() - mean()) < range) {
 			_sumWithinNSigma[n_sigma] += te.time();
 			_sum2WithinNSigma[n_sigma] += te.time() * te.time();
 			_sum3WithinNSigma[n_sigma] += te.time() * te.time() * te.time();
 			_numWithinNSigma[n_sigma]++;
 		}
 	}
-	return sum / num;
+	return;
 }
 
 
@@ -74,11 +75,11 @@ bool EcalCrystalTimingCalibration::isStableInEnergy(float min, float max, float 
 	for(unsigned int index = 0; index < nSteps; ++index) {
 //	  if(num[index]<50) break; // do the test only if there are at least 50 events
 
-		float mean = sum[index] / num[index];
-		float stdDev = sqrt(sum2[index] / num[index] - mean * mean);
-		if(stdDev / sqrt(num[index]) > meanError()) break; // does not make any sense to continue if the error is too high
+		float mean_ = sum[index] / num[index];
+		float stdDev_ = sqrt(sum2[index] / num[index] - mean_ * mean_);
+		if(stdDev_ / sqrt(num[index]) > meanError()) break; // does not make any sense to continue if the error is too high
 
-		if(abs(mean() - mean) > meanError() ) return false; /// \todo define a better criterium
+		if(abs(mean() - mean_) > meanError() ) return false; /// \todo define a better criterium
 		// now requires only that the mean with higher energy threshold is within the calibration statistical uncertainty
 	}
 	return true;
