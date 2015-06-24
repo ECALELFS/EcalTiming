@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classEcalCrystalTimingCalibration.html#aa920dddc3bc50fd113eeae556ea8df84" title="returns the skewness calculated within abs(mean+ n * stdDev) to reject tails" alt="" coords="781,5,1144,35"/>
+<area shape="rect" id="node5" href="$classEcalCrystalTimingCalibration.html#a2921bd240ecbb854fed759332dcca667" title="returns the stdDev calculated within abs(mean+ n * stdDev) to reject tails" alt="" coords="388,31,732,60"/>
+</map>
